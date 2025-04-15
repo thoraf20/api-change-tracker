@@ -1,4 +1,4 @@
-import { hasChanged } from "../../utils/diffEngine";
+import { hasChanged } from "../utils/diffEngine";
 
 let lastSnapshot: any = null;
 

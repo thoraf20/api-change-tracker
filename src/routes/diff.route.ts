@@ -1,11 +1,7 @@
 import fileUpload from "express-fileupload";
-import { getDiffFromFiles } from "../../utils/openapiDiff";
+import { getDiffFromFiles } from "../utils/openapiDiff";
 
-export const compareSpecsFromUpload = async (
-  req,
-  res,
-  next
-) => {
+export const compareSpecsFromUpload = async (req, res, next) => {
   try {
     if (!req.files || !req.files.spec1 || !req.files.spec2) {
       return res
