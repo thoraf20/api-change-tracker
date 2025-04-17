@@ -75,7 +75,6 @@ router.get("/diff", async (req, res) => {
       method
     });
 
-
     if (!current || !previous) {
       res.status(400).json({ message: "Not enough snapshots to compare" });
     }
