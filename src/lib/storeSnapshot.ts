@@ -5,12 +5,12 @@ export async function storeSnapshot(data: {
   url: string;
   headers: any;
   body: any;
+  client_id: string;
 }) {
-
-  const { url, method, body, headers } = data
+  const { url, method, body, headers, client_id } = data;
   await db.query(
-    "INSERT INTO snapshots (url, method, body, headers, created_at) VALUES ($1, $2, $3, $4, NOW())",
-    [url, method, body, headers]
+    "INSERT INTO snapshots (url, method, body, headers, client_id, created_at) VALUES ($1, $2, $3, $4, $5, NOW())",
+    [url, method, body, headers, client_id]
   );
 }
 
@@ -106,21 +106,23 @@ export async function getSnapshots({
 export async function getRecentSnapshots({
   url,
   method,
+  clientId,
   limit = 2,
 }: {
   url: string;
   method: string;
+  clientId: string
   limit?: number;
 }) {
   const result = await db.query(
     `
-    SELECT *
-    FROM snapshots
-    WHERE url = $1 AND method = $2
-    ORDER BY created_at DESC
-    LIMIT $3;
+      SELECT *
+      FROM snapshots
+      WHERE url = $1 AND method = $2 AND client_id = $3
+      ORDER BY created_at DESC
+      LIMIT $4;
     `,
-    [url, method.toUpperCase(), limit]
+    [url, method.toUpperCase(), clientId, limit]
   );
 
   return result.rows;

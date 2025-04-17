@@ -6,7 +6,7 @@ import db from "../config/db";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/snapshots", async (req, res) => {
   try {
     const snapshot = req.body;
     await storeSnapshot(snapshot);
@@ -17,7 +17,7 @@ router.post("/", async (req, res) => {
       clientId: snapshot.clientId,
     });
 
-    if(previous) {
+    if (previous) {
       const bodyDiff = generateDiff(previous.body, snapshot.body);
       const headersDiff = generateDiff(previous.headers, snapshot.headers);
 
@@ -28,7 +28,7 @@ router.post("/", async (req, res) => {
         ]);
       }
 
-      const client = result.rows[0] || null
+      const client = result.rows[0] || null;
 
       if (client.webhook) {
         await notifyWebhook(client.webhook, {
@@ -62,8 +62,8 @@ router.get("/snapshots", async (req, res) => {
   }
 });
 
-router.get("/diff", async (req, res) => {
-  const { url, method } = req.query as any;
+router.get("/snapshots/diff", async (req, res) => {
+  const { url, method, clientId } = req.query as any;
 
   if (!url || !method) {
     res.status(400).json({ message: "URL and method are required" });
@@ -72,7 +72,8 @@ router.get("/diff", async (req, res) => {
   try {
     const [current, previous] = await getRecentSnapshots({
       url,
-      method
+      method,
+      clientId
     });
 
     if (!current || !previous) {

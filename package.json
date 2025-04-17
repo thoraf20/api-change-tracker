@@ -31,6 +31,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/express-fileupload": "^1.5.1",
+    "@types/lodash": "^4.17.16",
     "@types/pg": "^8.11.13",
     "ts-node": "^10.9.2"
   }
