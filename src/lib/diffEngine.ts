@@ -1,4 +1,3 @@
-// lib/diffEngine.ts
 import { isEqual } from "lodash";
 
 export interface DiffResult {

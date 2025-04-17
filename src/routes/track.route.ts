@@ -1,7 +1,8 @@
 import express from "express";
-import { storeSnapshot } from "../lib/storeSnapshot";
-import prisma from "config/db";
+import { getPreviousSnapshot, getRecentSnapshots, getSnapshots, storeSnapshot } from "../lib/storeSnapshot";
 import { generateDiff } from "../lib/diffEngine";
+import { notifyWebhook } from "../lib/notifier";
+import db from "../config/db";
 
 const router = express.Router();
 
@@ -9,6 +10,37 @@ router.post("/", async (req, res) => {
   try {
     const snapshot = req.body;
     await storeSnapshot(snapshot);
+
+    const previous = await getPreviousSnapshot({
+      url: snapshot.url,
+      method: snapshot.method,
+      clientId: snapshot.clientId,
+    });
+
+    if(previous) {
+      const bodyDiff = generateDiff(previous.body, snapshot.body);
+      const headersDiff = generateDiff(previous.headers, snapshot.headers);
+
+      let result;
+      if (bodyDiff.length > 0 || headersDiff.length > 0) {
+        result = await db.query(`SELECT * FROM clients WHERE id = $1;`, [
+          snapshot.clientId,
+        ]);
+      }
+
+      const client = result.rows[0] || null
+
+      if (client.webhook) {
+        await notifyWebhook(client.webhook, {
+          url: snapshot.url,
+          method: snapshot.method,
+          differences: {
+            body: bodyDiff,
+            headers: headersDiff,
+          },
+        });
+      }
+    }
 
     res.status(200).json({ message: "Snapshot received and stored." });
   } catch (error) {
@@ -18,16 +50,10 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/snapshots", async (req, res) => {
-  const { url, method } = req.query;
+  const { url, method } = req.query as any;
 
   try {
-    const snapshots = await prisma.snapshot.findMany({
-      where: {
-        ...(url && { url: String(url) }),
-        ...(method && { method: String(method).toUpperCase() }),
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const snapshots = await getSnapshots({ url, method });
 
     res.status(200).json({ snapshots });
   } catch (err) {
@@ -37,33 +63,25 @@ router.get("/snapshots", async (req, res) => {
 });
 
 router.get("/diff", async (req, res) => {
-  const { url, method } = req.query;
+  const { url, method } = req.query as any;
 
   if (!url || !method) {
-    return res.status(400).json({ message: "URL and method are required" });
+    res.status(400).json({ message: "URL and method are required" });
   }
 
   try {
-    const snapshots = await prisma.snapshot.findMany({
-      where: {
-        url: String(url),
-        method: String(method).toUpperCase(),
-      },
-      orderBy: { createdAt: "desc" },
-      take: 2,
+    const [current, previous] = await getRecentSnapshots({
+      url,
+      method
     });
 
-    if (snapshots.length < 2) {
-      return res
-        .status(400)
-        .json({ message: "Not enough snapshots to compare" });
+
+    if (!current || !previous) {
+      res.status(400).json({ message: "Not enough snapshots to compare" });
     }
 
-    const prev = snapshots[1];
-    const current = snapshots[0];
-
-    const bodyDiff = generateDiff(prev.body, current.body);
-    const headersDiff = generateDiff(prev.headers, current.headers);
+    const bodyDiff = generateDiff(previous.body, current.body);
+    const headersDiff = generateDiff(previous.headers, current.headers);
 
     res.status(200).json({
       url,

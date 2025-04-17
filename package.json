@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node ./dist/server.js",
     "build": "tsc",
-    "dev": "npm run build && nodemon server.ts"
+    "dev": "npm run build && nodemon server.ts",
+    "migrate": "ts-node scripts/run-migrations.ts"
   },
   "author": "Toheeb Rauf",
   "license": "ISC",
@@ -21,7 +22,7 @@
     "lodash": "^4.17.21",
     "nodemon": "^3.1.9",
     "openapi-diff": "^0.23.7",
-    "ts-node": "^10.9.2",
+    "pg": "^8.14.1",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.8.3",
     "uuid": "^11.1.0"
@@ -30,6 +31,6 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/express-fileupload": "^1.5.1",
-    "prisma": "^6.6.0"
+    "ts-node": "^10.9.2"
   }
 }
