@@ -14,7 +14,7 @@ router.post("/snapshots", async (req, res) => {
     const previous = await getPreviousSnapshot({
       url: snapshot.url,
       method: snapshot.method,
-      clientId: snapshot.clientId,
+      clientId: snapshot.client_id,
     });
 
     if (previous) {
@@ -24,7 +24,7 @@ router.post("/snapshots", async (req, res) => {
       let result;
       if (bodyDiff.length > 0 || headersDiff.length > 0) {
         result = await db.query(`SELECT * FROM clients WHERE id = $1;`, [
-          snapshot.clientId,
+          snapshot.client_id,
         ]);
       }
 

@@ -45,6 +45,7 @@ export function generateDiff(
         newValue: currVal,
       });
       addedCount++;
+
     } else if (!currExists) {
       diffs.push({
         field: fullPath,
@@ -52,6 +53,7 @@ export function generateDiff(
         oldValue: prevVal,
       });
       removedCount++;
+
     } else if (isPlainObject(prevVal) && isPlainObject(currVal)) {
       // Recurse into nested objects
       diffs.push(...generateDiff(prevVal, currVal, fullPath));
@@ -60,6 +62,7 @@ export function generateDiff(
       const arrayDiffs = generateArrayDiff(prevVal, currVal, fullPath);
       diffs.push(...arrayDiffs);
       changedCount += arrayDiffs.length;
+      
     } else if (!isEqual(prevVal, currVal)) {
       diffs.push({
         field: fullPath,
@@ -78,8 +81,6 @@ export function generateDiff(
     totalChanges: addedCount + removedCount + changedCount,
     summary: `Changes detected: ${addedCount} added, ${removedCount} removed, ${changedCount} changed.`,
   };
-
-  console.log(summary); // Optional: Log summary
 
   return diffs;
 }
